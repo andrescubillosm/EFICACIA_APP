@@ -1,16 +1,20 @@
 import dash
 import dash_labs as dl
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, callback
 import dash_bootstrap_components as dbc
 import matplotlib.pyplot as plt
 import seaborn as sns
 import folium
+from dash.dependencies import Input, Output
 from folium.plugins import MarkerCluster
 import pandas as pd
 from dash_bootstrap_templates import load_figure_template
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
+from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
+from dash.exceptions import PreventUpdate
+from folium import plugins
 
 load_figure_template("minty")
 
@@ -47,6 +51,8 @@ def mapa():
         folium.Marker(location=(Lat, Lon),
                       popup=f"lat: {Lat}, lon : {Lon}, ciudad: {Ciudad}, cadena : {Cadena}").add_to(marker_cluster)
 
+    minimap = plugins.MiniMap()
+    map_tiendas.add_child(minimap)
 
     return map_tiendas
 
@@ -62,7 +68,7 @@ location_map.save('mapa_tiendas.html')
 
 map_fig = location_map
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY]) # CAMBIAR EL STILO DE BOOTSTRAP
+app = Dash(__name__, external_stylesheets=[dbc.themes.SIMPLEX]) # CAMBIAR EL STILO DE BOOTSTRAP
 
 
 # Encabezado y logo y se llama desde el layout
@@ -82,8 +88,8 @@ mapa = html.Div(
             [
             # ESta primera columana corresponde al mapa
                             html.Iframe(id='map',title= 'mapa', srcDoc = open('mapa_tiendas.html', 'r').read(),
-                                width='auto', height='500',# tamaño del mapa
-                                style={"border":"1px black solid"}),
+                                width='auto', height='500'# tamaño del mapa
+                                ),
             ],
         )],
             className="mt-2",
@@ -118,6 +124,24 @@ figure2 = dcc.Graph(
 
 
 
+def make_figure(mean=0, std=1, template="pulse"):
+    np.random.seed(2020)
+    data1 = np.random.normal(mean, std, size=500)
+    return px.histogram(data1, nbins=30, range_x=[-10, 10])
+
+
+layout = html.Div(
+    [
+        dcc.Graph(id="histograms-graph", figure=make_figure()),
+        html.P("Mean:"),
+        dcc.Slider(
+            id="histograms-mean", min=-3, max=3, value=1, marks={-3: "-3", 3: "3"}
+        ),
+        html.P("Standard Deviation:"),
+        dcc.Slider(id="histograms-std", min=1, max=3, value=1, marks={1: "1", 3: "3"}),
+    ]
+)
+
 fig = dcc.Graph(id='ejemplo',
     figure={
       'data': [
@@ -144,28 +168,18 @@ fig2 = dcc.Graph(id='ejemplo2',
 # en la esta se desarrolla el layout por partes invocando variables
 
 app.layout = html.Div([dbc.Container([heading], fluid=True),
-             dbc.Container([mapa], fluid=True),
+             html.Div([dbc.Container([mapa], fluid=True)]),
              dbc.Container([
-             html.Div( # graficas en 2 columnas
-                           [dbc.Row(
+              # graficas en 2 columnas
+                           dbc.Row(
                                    [
-                                       dbc.Col([figure1]),
-                                       dbc.Col([figure2]),
-                                   ],
-                               ),
-                           ]
-                       )]),
-             html.Div(  # graficas en 2 columnas
-                           [dbc.Row(
-                                   [
+                                       dbc.Col([figure1],lg=6),
+                                       dbc.Col([figure2],lg=6),
                                        dbc.Col([fig]),
-                                       dbc.Col([fig2])
-                                   ],
+                                       dbc.Col([layout],
                                ),
-                           ]
-                       )
-])
-
+                       ]),
+                       ])])
 
 
 if __name__ == "__main__":
