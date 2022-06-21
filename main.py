@@ -15,8 +15,8 @@ import numpy as np
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 from dash.exceptions import PreventUpdate
 from folium import plugins
-
-load_figure_template("minty")
+#se cambia plantilla por una mas similar en colores a la de eficacia ver https://bootswatch.com/
+load_figure_template("litera")
 
 url = 'https://raw.githubusercontent.com/andrescubillosm/grupo_108/main/EDA/geodata.csv'
 
@@ -164,7 +164,24 @@ fig2 = dcc.Graph(id='ejemplo2',
         }
       })
 
+#tablas dinamica por cadena 
+# contador de cadenas por regional 
+pvTable = pd.pivot_table(gea, index=['Cadena'], columns=["Regional"], aggfunc='count', dropna= True, margins =True, observed= True, sort=True)
 
+#ejemplos para graficos de columnas 
+#trace1 = go.Bar(x=pv.index, y=pv[('Quantity', 'declinada')], name='Declinada')
+#trace2 = go.Bar(x=pv.index, y=pv[('Quantity', 'pendiente')], name='Pendiente')
+#trace3 = go.Bar(x=pv.index, y=pv[('Quantity', 'presentada')], name='Presentada')
+#trace4 = go.Bar(x=pv.index, y=pv[('Quantity', 'ganada')], name='Ganada')
+
+#porbablemente este no vaya al final 
+pvTable2 = pd.pivot_table(gea, index=['Cadena', 'Ciudad'], columns=["DiaEntregaPedido"], aggfunc='sum', dropna= True, margins =True, observed= True,sort=True)
+
+#este tiene mejor resultado pero tiene muchas columnas 
+pvTable3 = pd.pivot_table(gea, index=['Depto','Ciudad'], columns=["Cadena"], dropna= True, margins =True, sort=True)
+
+#evaluar si funciona o no 
+pvTable4 = pd.pivot_table(gea, index=['Regional','Cadena'], columns=["Formato"], aggfunc='count', dropna= True, margins =True, observed= True,sort=True)
 # en la esta se desarrolla el layout por partes invocando variables
 
 app.layout = html.Div([dbc.Container([heading], fluid=True),
